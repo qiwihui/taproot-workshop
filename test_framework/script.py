@@ -930,6 +930,30 @@ class TapLeaf:
         self.desc = TapLeaf._desc_serializer('csa_hashlock_delay', str(k), *keys_string, data.hex(),str(delay))
         return self
 
+    def construct_pk_csa(self, key, k, pkv):
+        pk_node = miniscript.pk(key.get_bytes())
+        v_c_pk_node = miniscript.v(miniscript.c(pk_node))
+        keys_data = [key.get_bytes() for key in pkv]
+        thresh_csa_node = miniscript.thresh_csa(k, *keys_data)
+        # v_thresh_csa_node = miniscript.v(thresh_csa_node)
+        self._set_miniscript(miniscript.and_v(v_c_pk_node, thresh_csa_node))
+        keys_string = [data.hex() for data in keys_data]
+        self.desc = TapLeaf._desc_serializer('pk_csa', key.get_bytes().hex(), str(k), *keys_string)
+        return self
+
+    def construct_pk_pk_csa(self, key1, key2, k, pkv):
+        pk1_node = miniscript.pk(key1.get_bytes())
+        v_c_pk1_node = miniscript.v(miniscript.c(pk1_node))
+        pk2_node = miniscript.pk(key2.get_bytes())
+        v_c_pk2_node = miniscript.v(miniscript.c(pk2_node))
+        keys_data = [key.get_bytes() for key in pkv]
+        thresh_csa_node = miniscript.thresh_csa(k, *keys_data)
+        # v_thresh_csa_node = miniscript.v(thresh_csa_node)
+        self._set_miniscript(miniscript.and_v(miniscript.and_v(v_c_pk1_node, v_c_pk2_node), thresh_csa_node))
+        keys_string = [data.hex() for data in keys_data]
+        self.desc = TapLeaf._desc_serializer('pk_pk_csa', key1.get_bytes().hex(), key2.get_bytes().hex(), str(k), *keys_string)
+        return self
+
     def _set_miniscript(self, miniscript):
         self.miniscript = miniscript
         self.script = CScript(self.miniscript.script)
